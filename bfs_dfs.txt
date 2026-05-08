@@ -1,0 +1,64 @@
+# Parallel_BFS_DFS_Explanation.txt
+Title: Parallel Graph Traversal using OpenMP (Breadth-First and Depth-First Search)
+
+Theory:
+Graph traversal algorithms like Breadth-First Search (BFS) and Depth-First Search (DFS) are fundamentally sequential, but they can be optimized for multi-core processors using parallel computing frameworks like OpenMP[cite: 4].
+In this implementation, the graph is undirected and represented via an adjacency list[cite: 4].
+To parallelize the BFS traversal, the algorithm processes all nodes present at the current depth (or level) simultaneously[cite: 4].
+For DFS, the approach uses a stack-based iterative method rather than recursion to specifically avoid deadlocks[cite: 4].
+During the parallel execution loops, multiple threads concurrently check and mark neighboring nodes[cite: 4].
+Because multiple threads might attempt to access and modify the shared `visited` boolean array at the exact same time, thread synchronization is crucial.
+This is achieved using the `#pragma omp critical` compiler directive, which enforces that only one thread can execute a specific block of code at any given moment, preventing race conditions when updating the visited status and pushing nodes to the shared queue or stack[cite: 4].
+
+Algorithm:
+1. Import necessary libraries including `<omp.h>` for OpenMP support[cite: 4].
+2. Define the Graph Structure[cite: 4].
+   - Set the total number of nodes to 7[cite: 4].
+   - Implement an `addEdge` function to append symmetric connections for the undirected graph[cite: 4].
+3. Implement Parallel BFS[cite: 4].
+   - Initialize a queue and mark the start node as visited[cite: 4].
+   - Loop while the queue is not empty, extracting all nodes for the current level[cite: 4].
+   - Use `#pragma omp parallel for` to distribute the processing of neighbors across available threads[cite: 4].
+   - Wrap the visited check and queue push inside `#pragma omp critical`[cite: 4].
+4. Implement Parallel DFS[cite: 4].
+   - Initialize a stack array and mark the start node as visited[cite: 4].
+   - Loop while the stack is not empty, popping the top node[cite: 4].
+   - Collect unvisited neighbors in parallel, protecting the collection array with a critical section block[cite: 4].
+   - Push all collected neighbors onto the main stack sequentially[cite: 4].
+5. Execute Main Workflow[cite: 4].
+   - Construct the graph topology by linking nodes (0 to 1, 0 to 2, 1 to 3, 1 to 4, 2 to 5, 5 to 6)[cite: 4].
+   - Run the Parallel BFS starting from node 0[cite: 4].
+   - Initialize a new visited array for DFS[cite: 4].
+   - Run the Parallel DFS starting from node 0[cite: 4].
+6. Compile the code using `g++ -fopenmp P1_Parallel_BFS_DFS.cpp -o bfs_dfs`[cite: 4].
+
+Flowchart:
+START
+  |
+  v
+Define Constants & Setup Adjacency List (7 Nodes)[cite: 4]
+  |
+  v
+Build Undirected Graph (0 connected to 1 & 2, etc.)[cite: 4]
+  |
+  v
+Parallel BFS Execution[cite: 4]
+  -> Queue Start Node -> Extract Current Level -> (Parallel For) Inspect Neighbors -> (Critical) Mark & Enqueue[cite: 4]
+  |
+  v
+Reset Visited Array for DFS[cite: 4]
+  |
+  v
+Parallel DFS Execution[cite: 4]
+  -> Stack Start Node -> Pop Node -> (Parallel For) Find Neighbors -> (Critical) Mark & Collect -> Push to Stack[cite: 4]
+  |
+  v
+END
+
+Detailed Code Explanation:
+- Block 1 (Dependencies): Includes standard input/output, vector/queue data structures, and the `omp.h` header required to access OpenMP multi-threading pragmas and functions[cite: 4].
+- Block 2 (Global Variables): Defines `NODES` as a constant 7 and declares the `graph` as an array of integer vectors to act as an adjacency list representation[cite: 4].
+- Block 3 (Edge Creation): Defines `addEdge(int u, int v)`. Because this is an undirected graph, it pushes node `v` to `u`'s list, and immediately pushes node `u` to `v`'s list[cite: 4].
+- Block 4 (Parallel BFS Logic): Initializes a boolean `visited` array and a `queue`[cite: 4]. It captures nodes level-by-level into a `currentLevel` vector[cite: 4]. An OpenMP `#pragma omp parallel for` loop dynamically divides the work of inspecting each node's neighbors among threads[cite: 4]. To ensure multiple threads don't corrupt the queue or visited states, `#pragma omp critical` forces them to take turns modifying those structures[cite: 4].
+- Block 5 (Parallel DFS Logic): Avoids recursion to prevent deadlocks, opting for a standard `vector<int>` acting as an iterative stack[cite: 4]. When a node is popped, threads execute in parallel to find unvisited adjacent nodes, storing them temporarily in `toVisit` (safeguarded by a critical block) before sequentially pushing them onto the actual stack[cite: 4].
+- Block 6 (Main Execution): Orchestrates the program by mapping out the exact edges (e.g., node 2 connects to node 5, node 5 connects to node 6)[cite: 4]. It then invokes `parallelBFS` starting at node 0, sets up a fresh array, and invokes `parallelDFS`, terminating the program[cite: 4].
