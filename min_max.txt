@@ -1,0 +1,64 @@
+# Parallel_Reduction_Explanation.txt
+Title: Array Operations using OpenMP Parallel Reduction (Min, Max, Sum, Average)
+
+Theory:
+When executing loops in parallel, a common issue arises when multiple threads attempt to update a single shared variable simultaneously, leading to race conditions.
+To solve this efficiently without manually locking and unlocking variables (which causes severe performance bottlenecks), OpenMP provides the `reduction` clause[cite: 7].
+The `reduction` operation allows the compiler to create private, local copies of the target variable for each executing thread[cite: 7]. 
+Each thread independently performs its aggregate operation (such as finding the minimum, maximum, or sum) on its assigned chunk of the data[cite: 7].
+Once all threads have completed their iterations, OpenMP automatically and safely merges (or "reduces") the local results from each thread back into the original global variable[cite: 7].
+In this implementation, four core metrics are calculated using parallel reduction: the minimum value, the maximum value, the sum of all elements, and the computed average[cite: 7].
+For min and max operations, it is vital to initialize the variables with extreme baseline limits (e.g., `INT_MAX` for minimum and `INT_MIN` for maximum) to ensure any actual value from the array will correctly overwrite them during the initial comparisons[cite: 7].
+
+Algorithm:
+1. Import the `<omp.h>` library for multi-threading support and `<climits>` for data type extreme limits[cite: 7].
+2. Initialize the Environment[cite: 7].
+   - Define an array/vector containing `N` integers and print the initial data[cite: 7].
+3. Compute Minimum Value[cite: 7].
+   - Initialize `minVal` to `INT_MAX`[cite: 7].
+   - Execute an OpenMP `parallel for` loop utilizing `reduction(min : minVal)` to find the smallest element concurrently[cite: 7].
+4. Compute Maximum Value[cite: 7].
+   - Initialize `maxVal` to `INT_MIN`[cite: 7].
+   - Execute an OpenMP `parallel for` loop utilizing `reduction(max : maxVal)` to find the largest element concurrently[cite: 7].
+5. Compute Sum[cite: 7].
+   - Initialize `sum` to `0`[cite: 7].
+   - Execute an OpenMP `parallel for` loop utilizing `reduction(+ : sum)` to safely add array elements across multiple threads[cite: 7].
+6. Compute Average[cite: 7].
+   - Divide the computed `sum` by the total number of elements `N` (cast to double)[cite: 7].
+7. Output the final aggregated metrics[cite: 7].
+
+Flowchart:
+START
+  |
+  v
+Define Data Array {5, 3, 8, 1, 9, 2, 7, 4, 6, 10}[cite: 7]
+  |
+  v
+Parallel Loop 1: Find Minimum[cite: 7]
+  -> Divide array -> Threads find local mins -> Reduce (merge) into global minVal[cite: 7]
+  |
+  v
+Parallel Loop 2: Find Maximum[cite: 7]
+  -> Divide array -> Threads find local maxs -> Reduce (merge) into global maxVal[cite: 7]
+  |
+  v
+Parallel Loop 3: Compute Total Sum[cite: 7]
+  -> Divide array -> Threads sum local chunks -> Reduce (add) into global sum[cite: 7]
+  |
+  v
+Calculate Average (sum / N)[cite: 7]
+  |
+  v
+Print Results (Min, Max, Sum, Avg)[cite: 7]
+  |
+  v
+END
+
+Detailed Code Explanation:
+- Block 1 (Dependencies): Includes standard libraries (`iostream`, `vector`) and crucial headers like `<climits>` (to define `INT_MAX` and `INT_MIN`) and `<omp.h>` (for OpenMP parallel capabilities)[cite: 7].
+- Block 2 (Setup): The `main` function starts by defining the total number of items `N = 10` and populating a standard integer vector `arr` with predefined arbitrary values, which is then printed to the console[cite: 7].
+- Block 3 (Parallel Minimum): Initializes `minVal` to the highest possible integer (`INT_MAX`)[cite: 7]. The `#pragma omp parallel for reduction(min : minVal)` directive automatically splits the loop across threads and safely handles the tracking of the minimum integer discovered[cite: 7].
+- Block 4 (Parallel Maximum): Replicates the logic of Block 3, but initializes `maxVal` to the lowest possible integer (`INT_MIN`) and uses the `max` reduction operator to find the highest value[cite: 7].
+- Block 5 (Parallel Summation): Initializes a `long long` variable `sum` to 0 to prevent potential integer overflow on large datasets[cite: 7]. Applies the `+` reduction operator to safely aggregate the running total[cite: 7].
+- Block 6 (Average Logic): Calculates the average strictly sequentially. It casts the parallel-computed `sum` to a `double` and divides it by `N` to preserve decimal precision[cite: 7].
+- Block 7 (Output): Neatly prints out all four computed statistics to the terminal and returns `0` to end the program[cite: 7].
