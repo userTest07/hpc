@@ -1,0 +1,74 @@
+# Parallel_Sorting_Explanation.txt
+Title: Parallel Sorting Algorithms using OpenMP (Bubble Sort & Merge Sort)
+
+Theory:
+Sorting algorithms can be optimized by executing independent sorting operations concurrently across multiple CPU cores using OpenMP[cite: 5].
+To parallelize Bubble Sort, a variant called Odd-Even Transposition Sort is implemented[cite: 5]. 
+This algorithm splits the comparison operations into two distinct phases per iteration: comparing and swapping even-indexed pairs, followed by odd-indexed pairs[cite: 5]. 
+By separating the indices this way, no two threads will ever attempt to modify the exact same element simultaneously, safely preventing data race conditions[cite: 5].
+Merge Sort naturally fits parallelization due to its Divide and Conquer structure. 
+As the array is recursively halved, the left and right sub-arrays can be sorted independently by different threads[cite: 5].
+To implement this, OpenMP's `parallel sections` directive is used to assign separate threads to each recursive call[cite: 5].
+However, generating a new thread for every tiny recursion depth introduces significant performance overhead. 
+To counteract this, the recursion depth is tracked, and parallel sections are only utilized if the current depth is less than or equal to 3[cite: 5]. Once the depth exceeds 3, the algorithm falls back to standard sequential execution for the remaining smaller chunks[cite: 5].
+Performance between algorithms can be measured and compared using `omp_get_wtime()` to capture execution time[cite: 5].
+
+Algorithm:
+1. Import necessary libraries including `<omp.h>` for multi-threading functions[cite: 5].
+2. Implement Parallel Bubble Sort[cite: 5].
+   - Iterate `n` times based on the array size[cite: 5].
+   - Execute an OpenMP `parallel for` loop to swap out-of-order elements at even indices (step of 2)[cite: 5].
+   - Execute a second OpenMP `parallel for` loop to swap out-of-order elements at odd indices (step of 2)[cite: 5].
+3. Implement standard Merge logic[cite: 5].
+   - Copy data to temporary Left and Right vectors, then merge them back into the main array in sorted order[cite: 5].
+4. Implement Parallel Merge Sort[cite: 5].
+   - Base case: return if left index >= right index[cite: 5].
+   - Find the midpoint `m`[cite: 5].
+   - If `depth <= 3`, use `#pragma omp parallel sections` to execute left and right recursive calls concurrently[cite: 5].
+   - Else, execute left and right recursive calls sequentially[cite: 5].
+   - Call the `merge` function to combine the sorted halves[cite: 5].
+5. Execute Main Workflow[cite: 5].
+   - Initialize the main vector with values `{9,3,7,1,5,8,2,6,4,0}` and create copies for testing[cite: 5].
+   - Track time using `omp_get_wtime()` and run a standard Sequential Bubble Sort[cite: 5].
+   - Track time and run the Parallel Bubble Sort[cite: 5].
+   - Track time and run Merge Sort on the first copy[cite: 5].
+   - Track time and run Merge Sort on the second copy[cite: 5].
+   - Print the final sorted array to verify correctness[cite: 5].
+
+Flowchart:
+START
+  |
+  v
+Define Initial Arrays: {9,3,7,1,5,8,2,6,4,0}[cite: 5]
+  |
+  v
+Sequential Bubble Sort Execution -> Output Time[cite: 5]
+  |
+  v
+Parallel Bubble Sort Execution[cite: 5]
+  -> Phase 1: Parallel For (Even Indices)[cite: 5]
+  -> Phase 2: Parallel For (Odd Indices)[cite: 5]
+  -> Output Time[cite: 5]
+  |
+  v
+Merge Sort Execution (Parallelized)[cite: 5]
+  -> Divide Array -> Is Depth <= 3?[cite: 5]
+     -> YES: Run recursive calls in Parallel Sections[cite: 5]
+     -> NO: Run recursive calls Sequentially[cite: 5]
+  -> Merge Halves -> Output Time[cite: 5]
+  |
+  v
+Print Final Sorted Array[cite: 5]
+  |
+  v
+END
+
+Detailed Code Explanation:
+- Block 1 (Dependencies): Imports standard I/O, vector collections, and `omp.h` for OpenMP routines and pragmas[cite: 5].
+- Block 2 (Parallel Bubble Sort): The `bubbleSort` function loops `n` times[cite: 5]. Inside, it uses `#pragma omp parallel for` to distribute iterations across threads[cite: 5]. The `j += 2` stepping ensures threads process non-overlapping pairs (first even pairs, then odd pairs), safely performing standard swaps[cite: 5].
+- Block 3 (Merge Helper): A standard sequential `merge` function that divides a segment into `L` and `R` temporary vectors, iterates through them, and overwrites the main array segment with elements in sorted order[cite: 5].
+- Block 4 (Parallel Merge Sort): The recursive `mergeSort` function calculates the midpoint `m`[cite: 5]. Crucially, it monitors recursion `depth` (starting at 0)[cite: 5]. If `depth <= 3`, it invokes `#pragma omp parallel sections` and `#pragma omp section` to split the recursive left/right sorting tasks into separate threads[cite: 5]. Otherwise, it avoids thread overhead by executing sequentially[cite: 5]. Finally, it merges the two segments[cite: 5].
+- Block 5 (Main Setup & Seq Bubble): Sets up the unsorted vector arrays[cite: 5]. It captures the start time via `omp_get_wtime()`, executes a standard, nested loop sequential bubble sort, and calculates/prints the elapsed time[cite: 5].
+- Block 6 (Run Par Bubble): Captures time, executes the parallelized `bubbleSort` on a copy of the array, and prints the time[cite: 5].
+- Blocks 7 & 8 (Run Merge Sorts): Captures time and executes `mergeSort`[cite: 5]. (Note: Both calls utilize the same function which internally parallelizes based on depth)[cite: 5].
+- Block 9 (Output): Loops through the finalized `b2` vector to print the sorted sequence and confirms the program completes successfully[cite: 5].
